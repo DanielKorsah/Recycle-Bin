@@ -1,0 +1,71 @@
+#!/bin/sh
+#usage
+#restore fileName
+
+#check that the number of arguments is exactly one
+if [[ $# -ne 1 ]]; then
+	echo error:
+	echo "Usage: restore <filename>"
+	Script Stopped
+	exit
+fi
+
+fileName=$1
+rb=/root/Recycle_Bin
+
+echo restoring $fileName
+echo from $rb/$fileName
+#test if file is in recycle bin
+if [ ! -e "$rb/$fileName" ]; then
+	echo error: file not in Recycle Bin
+	echo Script Stopped.
+	exit
+fi
+binnedFile=$rb/$fileName
+
+
+#check each line in pathStoarge for a path with basename of fileName
+pathStore=/root/pathStorage
+while read -r line
+do
+	if [[ "$line" != "" ]]; then #if line not empty check what path is holds
+	
+		#if line ends with name of file, restore it to the path on that line
+		if [ "$(basename $line)" = "$fileName" ]; then
+			restorePath=$line
+			echo to $restorePath
+			
+			#Temporary solution to create parent directory if it doesn't exist
+			if [ ! -e $restorePath ]; then
+				echo $restorePath is in a directory that no lolnger exists
+				mkdir $(dirname $restorePath)
+			fi
+			
+			#if the path doesn't exist anymore (long path), make it [FIX LATER - infinite loop]
+			#dirCheck=$restorePath
+			#while [ ! -e "$dirCheck" ]
+			#do
+			#	echo $restorePath is from a directory path that no longer exists
+			#	echo creating new directory at that path
+			#	mkdir "$(dirname $dirCheck)"
+			#	$dirCheck=$(dirname $dirCheck)
+			#done
+			
+			#if there is already a file there append .bak to fileName
+			if [ -f "$restorePath" ]; then
+				echo file already exists there
+				bak=".bak"
+				mv "$binnedFile" "$binnedFile$bak"
+				echo $binnedFile renamed to $binnedFile$bak
+				mv "$binnedFile$bak" "$(dirname $restorePath)"
+				echo $fileName restored
+				break
+			fi
+			mv "$binnedFile" "$(dirname $restorePath)"
+			echo $fileName restored
+			break
+		fi
+	fi
+done < "$pathStore"
+
+echo Script Complete

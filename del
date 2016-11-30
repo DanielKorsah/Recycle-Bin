@@ -1,0 +1,60 @@
+#!/bin/sh
+#script usage
+#del PathToFile
+
+#check that the number of arguments is exactly one
+if [[ $# -ne 1 ]]; then
+	echo error
+	echo Usage: "del <filepath>"
+	echo Script Stopped
+	exit
+fi
+echo number of arguments is $#
+
+filePath=$1
+#test if a file path is provided
+if [ -z "$1" ]; then
+	echo error
+	echo Usage: "del <filepath>"
+	echo Script Stopped.
+	exit
+fi
+
+#test file exists
+if [ ! -e "$filePath" ]; then
+	echo error: file does not exist.
+	echo Sript Stopped.
+	exit
+fi
+echo file exists
+
+rb=/root/Recycle_Bin					#shorthand path to recycle bin
+
+#if recycle bin doesn't exist then make it
+if [ ! -d "$rb" ]; then
+	mkdir "$rb"
+	echo recycle bin directory created
+fi
+
+pathStorage=/root/paths.txt
+#if no path staorage file then make it
+if [ ! -f "$pathStorage" ]; then
+	echo creating path storage
+	echo "" >> pathStorage				#initialise pathStorage
+fi
+
+dir=$(dirname "$filePath")				#directory path of file
+echo directory path: $dir
+echo rb: $rb
+#test if file already in recycle bin, if true delete it
+if [ "$dir" = "$rb" ]; then
+	rm -rf $filePath
+	echo file: $(basename $filePath) deleted from disk
+else
+	echo $filePath >> pathStorage
+	echo path saved
+	mv "$filePath" "$rb"
+	echo file $(basename $filePath) moved to recylce bin
+fi
+
+echo Script Complete
